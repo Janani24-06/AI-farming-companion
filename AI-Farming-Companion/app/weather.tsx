@@ -6,16 +6,7 @@ import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLanguage } from "@/lib/LanguageContext";
 import Colors from "@/constants/colors";
-
-interface WeatherData {
-  temp: number;
-  feelsLike: number;
-  humidity: number;
-  windSpeed: number;
-  rainChance: number;
-  condition: string;
-  location: string;
-}
+import { fetchWeather, WeatherData } from "@/lib/services/weatherService";
 
 function WeatherCard({ icon, label, value, unit, color }: {
   icon: React.ReactNode;
@@ -45,20 +36,26 @@ export default function WeatherScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setWeather({
-        temp: 28,
-        feelsLike: 32,
-        humidity: 72,
-        windSpeed: 14,
-        rainChance: 45,
-        condition: "Partly Cloudy",
-        location: "Chennai, Tamil Nadu",
-      });
-      setLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
+    async function loadWeather() {
+      try {
+        const data = await fetchWeather();
+        setWeather(data);
+      } catch (error) {
+        console.error("Failed to load weather:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadWeather();
   }, []);
+
+  const getWeatherIcon = (condition: string) => {
+    const cond = condition.toLowerCase();
+    if (cond.includes('cloud')) return <Ionicons name="cloud" size={56} color="#fff" />;
+    if (cond.includes('rain')) return <Ionicons name="rainy" size={56} color="#fff" />;
+    if (cond.includes('clear') || cond.includes('sun')) return <Ionicons name="sunny" size={56} color="#FFD54F" />;
+    return <Ionicons name="partly-sunny" size={56} color="#FFD54F" />;
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + webTopInset }]}>
@@ -82,7 +79,7 @@ export default function WeatherScreen() {
           >
             <Text style={styles.locationText}>{weather.location}</Text>
             <View style={styles.tempRow}>
-              <Ionicons name="partly-sunny" size={56} color="#FFD54F" />
+              {getWeatherIcon(weather.condition)}
               <View style={styles.tempInfo}>
                 <Text style={styles.tempBig}>{weather.temp}°C</Text>
                 <Text style={styles.conditionText}>{weather.condition}</Text>
@@ -127,9 +124,9 @@ export default function WeatherScreen() {
           </View>
 
           <View style={styles.apiNote}>
-            <Ionicons name="information-circle" size={18} color={Colors.light.textLight} />
-            <Text style={styles.apiNoteText}>
-              Connect OpenWeather API for live data
+            <Ionicons name="checkmark-circle" size={18} color="#2E7D32" />
+            <Text style={[styles.apiNoteText, { color: "#2E7D32" }]}>
+              Live Weather Data Connected
             </Text>
           </View>
         </View>

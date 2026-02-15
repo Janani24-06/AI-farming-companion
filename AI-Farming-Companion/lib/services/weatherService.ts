@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 
-const OPENWEATHER_API_KEY = '157b1160a7c69e8a335653b7a9e2c0be'; // Provided by user
+const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 
 export interface WeatherData {
   temp: number;
